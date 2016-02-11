@@ -4,8 +4,12 @@
 
 import praw, os, time
 from pprint import pprint
+import requests.packages.urllib3
+
+global exisiting_users
 
 def scrape(user):
+
     f = open(user + '.txt', 'w')
     
     r = praw.Reddit('User-Agent: testing_praw (by /u/XjCrazy09)')
@@ -19,7 +23,7 @@ def scrape(user):
     writing(user)
     
 def writing(user):
-
+    
     # import section
     print "Importing exisiting unique words"
     with open('unique.txt', 'r') as inputFile:
@@ -47,8 +51,9 @@ def writing(user):
     os.remove(user + '.txt')
     
     # slow your roll... don't want to step on any toes. 
+    print "sleeping, so I don't step on any toes..."
     time.sleep(10)
-    print "done sleeping..."
+    print "done sleeping... \n"
     
 def usersList(): 
     # import section
@@ -56,14 +61,14 @@ def usersList():
     with open('user_list.txt', 'r') as inputFile:
         old_users = inputFile.read().split()
     exisiting_users = set(old_users)
+    print exisiting_users
     print "Total user list: ", len(exisiting_users)
     
+    
     for user in exisiting_users:
+        print "Scraping: ", user 
         scrape(user)
     
-
 if __name__ == "__main__":
-    #user = raw_input("What User to Scrape? ")
-    #scrape(user)
-    
+    requests.packages.urllib3.disable_warnings()
     usersList()
