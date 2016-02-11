@@ -2,7 +2,7 @@
 # playing around with building wordlists using Python's Reddit API Wraper (praw)
 # as well as built-in Python functions such as set 
 
-import praw, os
+import praw, os, time
 from pprint import pprint
 
 def scrape(user):
@@ -14,9 +14,11 @@ def scrape(user):
         f.write(str(comments))
     
     f.close()
+    time.sleep(5)
+    print "moving on to writing..."
     writing(user)
     
-def writing(subreddit):
+def writing(user):
 
     # import section
     print "Importing exisiting unique words"
@@ -41,12 +43,27 @@ def writing(subreddit):
     print "Total unique_words: ", len(unique_words)
     
     # clean up files now.  
-    #print "cleaning up now..."
-    #os.remove(user + '.txt')
+    print "cleaning up now..."
+    os.remove(user + '.txt')
+    
+    # slow your roll... don't want to step on any toes. 
+    time.sleep(10)
+    print "done sleeping..."
+    
+def usersList(): 
+    # import section
+    print "Importing exisiting Users."
+    with open('user_list.txt', 'r') as inputFile:
+        old_users = inputFile.read().split()
+    exisiting_users = set(old_users)
+    print "Total user list: ", len(exisiting_users)
+    
+    for user in exisiting_users:
+        scrape(user)
     
 
 if __name__ == "__main__":
-    user = raw_input("What User to Scrape? ")
-    scrape(user)
+    #user = raw_input("What User to Scrape? ")
+    #scrape(user)
     
-    #r = praw.Reddit('User-Agent: testing_praw (by /u/XjCrazy09)')
+    usersList()
