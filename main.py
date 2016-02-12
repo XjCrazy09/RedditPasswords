@@ -6,8 +6,6 @@ import praw, os, time
 from pprint import pprint
 import requests.packages.urllib3
 
-global exisiting_users
-
 def scrape(user):
 
     f = open(user + '.txt', 'w')
@@ -25,6 +23,10 @@ def scrape(user):
 def writing(user):
     
     # import section
+    
+    # Need to work on this so that it doesn't have to spend extra time and processing to read this file
+    # every single time.  List is getting large and will eventually cripple the I/O
+    # could make it a global and just append the new words to it.  Then it would only load once per execution, not per loop
     print "Importing exisiting unique words"
     with open('unique.txt', 'r') as inputFile:
         exisiting = inputFile.read().split()
@@ -58,17 +60,49 @@ def writing(user):
 def usersList(): 
     # import section
     print "Importing exisiting Users."
+    
     with open('user_list.txt', 'r') as inputFile:
         old_users = inputFile.read().split()
     exisiting_users = set(old_users)
-    print exisiting_users
+
     print "Total user list: ", len(exisiting_users)
     
-    
-    for user in exisiting_users:
-        print "Scraping: ", user 
+
+    for index, user in enumerate(exisiting_users):
+        print "Scraping: %s Number %d of %d" % (user,index + 1, len(exisiting_users)) 
         scrape(user)
+        
+def get_users():
+    # Used to add more users to the list
+    
+    f = open('user_list.txt', 'a')
+
+    # let's try and get a list of users some how.  
+    r = praw.Reddit('User-Agent: user_list (by /u/XjCrazy09)')
+    
+    # check to see if user already exists.  Because if so they have already been scraped.  
+    submissions = r.get_random_subreddit().get_top(limit=100)
+    print "Running..."
+    for i in submissions: 
+        print i.author.name
+        with open('user_list.txt', 'a') as output:
+            output.write(i.author.name + "\n")
+    print "Finished..."
     
 if __name__ == "__main__":
+    # disable warnings to make it look prettier 
+    # The reason this is needed is because Reddit wants to move to OAuth
     requests.packages.urllib3.disable_warnings()
+    
+    
+    # Let's import the already exisiting user list as a set so we don't over work. 
+    # import section
+    print "Importing exisiting Users"
+    with open('user_list.txt', 'r') as inputFile:
+        exisiting_users = inputFile.read().split()
+    
+    old_users = set(exisiting_users)
+    print "Exisiting Users: ", len(old_users)
+    old_user_count = len(old_users)
+    
     usersList()
