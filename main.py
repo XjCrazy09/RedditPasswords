@@ -11,12 +11,20 @@ def scrape(user):
     f = open(user + '.txt', 'w')
     
     r = praw.Reddit('User-Agent: testing_praw (by /u/XjCrazy09)')
-    xjcrazy = r.get_redditor(user)
-    for comments in xjcrazy.get_comments(limit=None):
-        f.write(str(comments))
+    
+    try:
+        data = r.get_redditor(user)
+        for comments in data.get_comments(limit=None):
+            f.write(str(comments))
+    except praw.errors.NotFound:
+        print "whoopsie..user is either gone or shadowbound \n"
+        # clean up files now.  
+        print "cleaning up now..."
+        os.remove(user + '.txt')
+        return 0
     
     f.close()
-    time.sleep(5)
+    time.sleep(10)
     print "moving on to writing..."
     writing(user)
     
@@ -54,7 +62,7 @@ def writing(user):
     
     # slow your roll... don't want to step on any toes. 
     print "sleeping, so I don't step on any toes..."
-    time.sleep(10)
+    time.sleep(5)
     print "done sleeping... \n"
     
 def usersList(): 
@@ -67,42 +75,45 @@ def usersList():
 
     print "Total user list: ", len(exisiting_users)
     
-
     for index, user in enumerate(exisiting_users):
         print "Scraping: %s Number %d of %d" % (user,index + 1, len(exisiting_users)) 
         scrape(user)
+    
+    # should be out of users... so let's fix that
+    get_users()
         
 def get_users():
-    # Used to add more users to the list
     
-    f = open('user_list.txt', 'a')
+    # each time ran, clean the user_list
+    with open('user_list.txt', 'w'):
+        pass
+    
+    count = 0
 
     # let's try and get a list of users some how.  
     r = praw.Reddit('User-Agent: user_list (by /u/XjCrazy09)')
     
-    # check to see if user already exists.  Because if so they have already been scraped.  
-    submissions = r.get_random_subreddit().get_top(limit=100)
-    print "Running..."
-    for i in submissions: 
-        print i.author.name
-        with open('user_list.txt', 'a') as output:
-            output.write(i.author.name + "\n")
-    print "Finished..."
+    # check to see if user already exists.  Because if so they have already been scraped. 
+    while count < 100:
+        submissions = r.get_random_subreddit().get_top(limit=None)
+        print "Running..."
+        for i in submissions: 
+            print i.author.name
+            # run a tally
+            count+=1 
+            with open('user_list.txt', 'a') as output:
+                output.write(i.author.name + "\n")
+        print "Finished... \n"
+        print "count: ", count
+        time.sleep(5)
+        
+    usersList()
     
 if __name__ == "__main__":
+    
     # disable warnings to make it look prettier 
     # The reason this is needed is because Reddit wants to move to OAuth
     requests.packages.urllib3.disable_warnings()
     
-    
-    # Let's import the already exisiting user list as a set so we don't over work. 
-    # import section
-    print "Importing exisiting Users"
-    with open('user_list.txt', 'r') as inputFile:
-        exisiting_users = inputFile.read().split()
-    
-    old_users = set(exisiting_users)
-    print "Exisiting Users: ", len(old_users)
-    old_user_count = len(old_users)
-    
-    usersList()
+    # Start by grabbing some users.  Entry point to the infinite loop
+    get_users()
